@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sky Ascender</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { touch-action: none; overflow: hidden; background-color: #1a202c; }
+        .game-container { position: relative; overflow: hidden; }
+        /* Prevent text selection */
+        * { user-select: none; -webkit-user-select: none; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useCallback } = React;
+
+        // --- Game Constants ---
+        const GRAVITY = 0.6;
+        const JUMP_FORCE = -10; // Upward velocity
+        const MOVEMENT_SPEED = 5;
+        const PLAYER_SIZE = 30;
+        const PLATFORM_WIDTH = 60;
+        const PLATFORM_HEIGHT = 15;
+        
+        // --- Assets (SVG Icons) ---
+        const HeroIcon = () => (
+            <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-lg">
+                <circle cx="50" cy="50" r="45" fill="#3b82f6" stroke="#1d4ed8" strokeWidth="5" />
+                <circle cx="35" cy="35" r="12" fill="white" />
+                <circle cx="35" cy="35" r="5" fill="black" />
+                <circle cx="65" cy="35" r="12" fill="white" />
+                <circle cx="65" cy="35" r="5" fill="black" />
+                <path d="M 35 70 Q 50 80 65 70" stroke="white" strokeWidth="3" fill="none" />
+            </svg>
+        );
+
+        const PlatformIcon = () => (
+            <div className="w-full h-full bg-gradient-to-b from-green-400 to-green-600 rounded-md border-t-4 border-green-300 shadow-md"></div>
+        );
+
+        const App = () => {
+            // State
+            const [gameState, setGameState] = useState('START'); // START, PLAYING, GAME_OVER
+            const [score, setScore] = useState(0);
+            const [highScore, setHighScore] = useState(0);
+            
+            // Refs for game loop variables to avoid re-renders causing lag
+            const gameLoopRef = useRef(null);
+            const playerRef = useRef({ x: 0, y: 0, vy: 0, vx: 0 });
+            const platformsRef = useRef([]);
+            const cameraYRef = useRef(0);
+            const containerRef = useRef(null);
+            const inputRef = useRef({ left: false, right: false });
+
+            // Initialize Game
+            const startGame = () => {
+                const width = window.innerWidth > 500 ? 400 : window.innerWidth;
+                const height = window.innerHeight;
+                
+                playerRef.current = { x: width / 2 - PLAYER_SIZE / 2, y: height - 200, vy: JUMP_FORCE, vx: 0 };
+                cameraYRef.current = 0;
+                setScore(0);
+                
+                // Generate initial platforms
+                let platforms = [];
+                for (let i = 0; i < 20; i++) {
+                    platforms.push({
+                        x: Math.random() * (width - PLATFORM_WIDTH),
+                        y: height - 100 - i * 120,
+                        id: i
+                    });
+                }
+                platformsRef.current = platforms;
+                
+                setGameState('PLAYING');
+            };
+
+            // Input Handlers
+            const handleTouchStart = (e) => {
+                if (gameState !== 'PLAYING') return;
+                const touchX = e.touches[0].clientX;
+                const width = window.innerWidth > 500 ? 400 : window.innerWidth;
+                const centerX = (window.innerWidth - width) / 2 + width / 2;
+                
+                if (touchX < centerX) inputRef.current.left = true;
+                else inputRef.current.right = true;
+            };
+
+            const handleTouchEnd = () => {
+                inputRef.current.left = false;
+                inputRef.current.right = false;
+            };
+
+            const handleKeyDown = (e) => {
+                if (e.key === 'ArrowLeft') inputRef.current.left = true;
+                if (e.key === 'ArrowRight') inputRef.current.right = true;
+            };
+
+            const handleKeyUp = (e) => {
+                if (e.key === 'ArrowLeft') inputRef.current.left = false;
+                if (e.key === 'ArrowRight') inputRef.current.right = false;
+            };
+
+            // Game Loop
+            useEffect(() => {
+                if (gameState !== 'PLAYING') return;
+
+                const width = window.innerWidth > 500 ? 400 : window.innerWidth;
+                const height = window.innerHeight;
+
+                const loop = () => {
+                    const player = playerRef.current;
+                    
+                    // 1. Apply Gravity
+                    player.vy += GRAVITY;
+                    player.y += player.vy;
+
+                    // 2. Handle Movement
+                    if (inputRef.current.left) player.x -= MOVEMENT_SPEED;
+                    if (inputRef.current.right) player.x += MOVEMENT_SPEED;
+
+                    // Screen wrapping
+                    if (player.x < -PLAYER_SIZE / 2) player.x = width - PLAYER_SIZE / 2;
+                    if (player.x > width - PLAYER_SIZE / 2) player.x = -PLAYER_SIZE / 2;
+
+                    // 3. Camera Movement (Only moves up)
+                    const targetCameraY = player.y - height / 2;
+                    if (targetCameraY < cameraYRef.current) {
+                        cameraYRef.current = targetCameraY;
+                        setScore(s => Math.max(s, Math.floor(-cameraYRef.current / 10)));
+                    }
+
+                    // 4. Collision with Platforms
+                    // Only jump if falling downward
+                    if (player.vy > 0) {
+                        platformsRef.current.forEach(plat => {
+                            if (
+                                player.x + PLAYER_SIZE > plat.x &&
+                                player.x < plat.x + PLATFORM_WIDTH &&
+                                player.y + PLAYER_SIZE > plat.y &&
+                                player.y + PLAYER_SIZE < plat.y + PLATFORM_HEIGHT + player.vy
+                            ) {
+                                player.vy = JUMP_FORCE; // BOUNCE!
+                            }
+                        });
+                    }
+
+                    // 5. Platform Management (Infinite generation)
+                    platformsRef.current = platformsRef.current.filter(p => p.y > cameraYRef.current - 100); // Remove old
+                    
+                    const highestPlatformY = platformsRef.current[platformsRef.current.length - 1].y;
+                    if (highestPlatformY > cameraYRef.current - height) {
+                        // Add new platform
+                        platformsRef.current.push({
+                            x: Math.random() * (width - PLATFORM_WIDTH),
+                            y: highestPlatformY - (80 + Math.random() * 60), // Random gap
+                            id: Math.random()
+                        });
+                    }
+
+                    // 6. Game Over Check
+                    if (player.y > cameraYRef.current + height) {
+                        setGameState('GAME_OVER');
+                        setHighScore(prev => Math.max(prev, Math.floor(-cameraYRef.current / 10)));
+                    } else {
+                        gameLoopRef.current = requestAnimationFrame(loop);
+                    }
+                };
+
+                gameLoopRef.current = requestAnimationFrame(loop);
+
+                return () => cancelAnimationFrame(gameLoopRef.current);
+            }, [gameState]);
+
+            // Render Helpers
+            const width = typeof window !== 'undefined' ? (window.innerWidth > 500 ? 400 : window.innerWidth) : 300;
+            const height = typeof window !== 'undefined' ? window.innerHeight : 600;
+
+            // Dynamic Styles based on camera
+            const getStyle = (obj) => ({
+                left: obj.x,
+                top: obj.y - cameraYRef.current,
+                width: obj.width || PLATFORM_WIDTH,
+                height: obj.height || PLATFORM_HEIGHT,
+                position: 'absolute'
+            });
+
+            useEffect(() => {
+                window.addEventListener('keydown', handleKeyDown);
+                window.addEventListener('keyup', handleKeyUp);
+                return () => {
+                    window.removeEventListener('keydown', handleKeyDown);
+                    window.removeEventListener('keyup', handleKeyUp);
+                };
+            }, []);
+
+            return (
+                <div 
+                    className="w-full h-screen bg-gray-900 flex justify-center overflow-hidden"
+                    onTouchStart={handleTouchStart}
+                    onTouchEnd={handleTouchEnd}
+                >
+                    <div 
+                        ref={containerRef}
+                        className="relative bg-sky-900 shadow-2xl overflow-hidden"
+                        style={{ width: width, height: height }}
+                    >
+                        {/* Background Elements */}
+                        <div className="absolute inset-0 opacity-30" 
+                            style={{backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)', backgroundSize: '20px 20px'}}>
+                        </div>
+
+                        {gameState === 'START' && (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center z-50 bg-black/50 text-white">
+                                <h1 className="text-4xl font-bold text-yellow-400 mb-4 drop-shadow-md">Sky Ascender</h1>
+                                <p className="mb-8 text-gray-200">Tap Left/Right to Move</p>
+                                <button 
+                                    onClick={startGame}
+                                    className="px-8 py-4 bg-green-500 rounded-full text-xl font-bold hover:bg-green-400 transition transform active:scale-95 shadow-lg border-b-4 border-green-700"
+                                >
+                                    PLAY
+                                </button>
+                            </div>
+                        )}
+
+                        {gameState === 'GAME_OVER' && (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center z-50 bg-red-900/80 text-white">
+                                <h2 className="text-3xl font-bold mb-2">FALLEN!</h2>
+                                <div className="text-6xl font-black mb-4 text-yellow-300">{score}</div>
+                                <p className="text-gray-300 mb-8">Best: {highScore}</p>
+                                <button 
+                                    onClick={startGame}
+                                    className="px-8 py-4 bg-blue-500 rounded-full text-xl font-bold hover:bg-blue-400 transition shadow-lg border-b-4 border-blue-700"
+                                >
+                                    TRY AGAIN
+                                </button>
+                            </div>
+                        )}
+
+                        {/* HUD */}
+                        {gameState === 'PLAYING' && (
+                            <div className="absolute top-4 left-4 text-white font-bold text-2xl drop-shadow-md z-40 font-mono">
+                                {score}m
+                            </div>
+                        )}
+
+                        {/* Game World */}
+                        {gameState === 'PLAYING' && (
+                            <>
+                                {/* Player */}
+                                <div 
+                                    style={{
+                                        position: 'absolute',
+                                        left: playerRef.current?.x || 0,
+                                        top: (playerRef.current?.y || 0) - cameraYRef.current,
+                                        width: PLAYER_SIZE,
+                                        height: PLAYER_SIZE
+                                    }}
+                                >
+                                    <HeroIcon />
+                                </div>
+
+                                {/* Platforms */}
+                                {platformsRef.current.map(plat => (
+                                    <div key={plat.id} style={getStyle(plat)}>
+                                        <PlatformIcon />
+                                    </div>
+                                ))}
+                            </>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
+
