@@ -9,29 +9,35 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { touch-action: none; overflow: hidden; background-color: #1a202c; }
-        .game-container { position: relative; overflow: hidden; }
-        /* Prevent text selection */
-        * { user-select: none; -webkit-user-select: none; }
+        body { 
+            touch-action: none; 
+            overflow: hidden; 
+            background-color: #111827; 
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        /* Disable blue highlight on tap */
+        * { -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef, useCallback } = React;
+        const { useState, useEffect, useRef } = React;
 
-        // --- Game Constants ---
-        const GRAVITY = 0.6;
-        const JUMP_FORCE = -10; // Upward velocity
-        const MOVEMENT_SPEED = 5;
+        // --- Configuration ---
+        const GRAVITY = 0.4;
+        const JUMP_FORCE = -9.5; 
+        const MOVEMENT_SPEED = 6;
         const PLAYER_SIZE = 30;
         const PLATFORM_WIDTH = 60;
         const PLATFORM_HEIGHT = 15;
-        
-        // --- Assets (SVG Icons) ---
+        const SCREEN_WIDTH = Math.min(window.innerWidth, 500);
+
+        // --- Graphics ---
         const HeroIcon = () => (
-            <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-lg">
+            <svg viewBox="0 0 100 100" className="w-full h-full filter drop-shadow-lg">
                 <circle cx="50" cy="50" r="45" fill="#3b82f6" stroke="#1d4ed8" strokeWidth="5" />
                 <circle cx="35" cy="35" r="12" fill="white" />
                 <circle cx="35" cy="35" r="5" fill="black" />
@@ -42,238 +48,251 @@
         );
 
         const PlatformIcon = () => (
-            <div className="w-full h-full bg-gradient-to-b from-green-400 to-green-600 rounded-md border-t-4 border-green-300 shadow-md"></div>
+            <div className="w-full h-full bg-gradient-to-b from-green-400 to-green-600 rounded-md border-t-4 border-green-300 shadow-lg"></div>
+        );
+
+        const SpeakerIcon = ({ muted }) => (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8 text-white drop-shadow-md">
+                {muted ? (
+                    <g><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><line x1="23" y1="9" x2="17" y2="15" /><line x1="17" y1="9" x2="23" y2="15" /></g>
+                ) : (
+                    <g><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" /></g>
+                )}
+            </svg>
         );
 
         const App = () => {
-            // State
-            const [gameState, setGameState] = useState('START'); // START, PLAYING, GAME_OVER
+            const [gameState, setGameState] = useState('START');
             const [score, setScore] = useState(0);
             const [highScore, setHighScore] = useState(0);
-            
-            // Refs for game loop variables to avoid re-renders causing lag
-            const gameLoopRef = useRef(null);
-            const playerRef = useRef({ x: 0, y: 0, vy: 0, vx: 0 });
-            const platformsRef = useRef([]);
-            const cameraYRef = useRef(0);
-            const containerRef = useRef(null);
-            const inputRef = useRef({ left: false, right: false });
+            const [isMuted, setIsMuted] = useState(false);
+            const [, setTick] = useState(0); // Force render
 
-            // Initialize Game
-            const startGame = () => {
-                const width = window.innerWidth > 500 ? 400 : window.innerWidth;
-                const height = window.innerHeight;
-                
-                playerRef.current = { x: width / 2 - PLAYER_SIZE / 2, y: height - 200, vy: JUMP_FORCE, vx: 0 };
-                cameraYRef.current = 0;
+            // Refs
+            const player = useRef({ x: SCREEN_WIDTH / 2, y: 0, vx: 0, vy: 0 });
+            const platforms = useRef([]);
+            const camera = useRef({ y: 0 });
+            const inputs = useRef({ left: false, right: false });
+            const reqRef = useRef(); 
+            
+            // Audio Context Ref
+            const audioCtxRef = useRef(null);
+
+            // Initialize Audio Engine
+            const initAudio = () => {
+                if (!audioCtxRef.current) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) {
+                        audioCtxRef.current = new AudioContext();
+                    }
+                }
+                // Mobile browsers require resuming context on user gesture
+                if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
+                    audioCtxRef.current.resume();
+                }
+            };
+
+            // Play Synthesized Jump Sound
+            const playJumpSound = () => {
+                if (isMuted || !audioCtxRef.current) return;
+
+                const ctx = audioCtxRef.current;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                // Sound properties (Rising pitch for jump)
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(150, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.1);
+
+                // Volume envelope (Fade out)
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+
+                osc.start();
+                osc.stop(ctx.currentTime + 0.1);
+            };
+
+            const toggleMute = () => {
+                setIsMuted(!isMuted);
+            };
+
+            // Start Game
+            const initGame = () => {
+                initAudio(); // Unlock audio on Start button tap
+
+                // Reset Game State
+                const startY = window.innerHeight - 100;
+                player.current = { x: SCREEN_WIDTH / 2 - PLAYER_SIZE/2, y: startY - 100, vx: 0, vy: JUMP_FORCE };
+                camera.current.y = 0;
                 setScore(0);
-                
-                // Generate initial platforms
-                let platforms = [];
-                for (let i = 0; i < 20; i++) {
-                    platforms.push({
-                        x: Math.random() * (width - PLATFORM_WIDTH),
-                        y: height - 100 - i * 120,
-                        id: i
+
+                let newPlatforms = [];
+                for (let i = 0; i < 15; i++) {
+                    newPlatforms.push({
+                        id: i,
+                        x: Math.random() * (SCREEN_WIDTH - PLATFORM_WIDTH),
+                        y: startY - (i * 100)
                     });
                 }
-                platformsRef.current = platforms;
+                newPlatforms[0].x = SCREEN_WIDTH / 2 - PLATFORM_WIDTH/2;
+                newPlatforms[0].y = startY;
                 
+                platforms.current = newPlatforms;
                 setGameState('PLAYING');
             };
 
-            // Input Handlers
-            const handleTouchStart = (e) => {
-                if (gameState !== 'PLAYING') return;
-                const touchX = e.touches[0].clientX;
-                const width = window.innerWidth > 500 ? 400 : window.innerWidth;
-                const centerX = (window.innerWidth - width) / 2 + width / 2;
-                
-                if (touchX < centerX) inputRef.current.left = true;
-                else inputRef.current.right = true;
-            };
-
-            const handleTouchEnd = () => {
-                inputRef.current.left = false;
-                inputRef.current.right = false;
-            };
-
-            const handleKeyDown = (e) => {
-                if (e.key === 'ArrowLeft') inputRef.current.left = true;
-                if (e.key === 'ArrowRight') inputRef.current.right = true;
-            };
-
-            const handleKeyUp = (e) => {
-                if (e.key === 'ArrowLeft') inputRef.current.left = false;
-                if (e.key === 'ArrowRight') inputRef.current.right = false;
-            };
-
             // Game Loop
-            useEffect(() => {
+            const update = () => {
                 if (gameState !== 'PLAYING') return;
 
-                const width = window.innerWidth > 500 ? 400 : window.innerWidth;
-                const height = window.innerHeight;
+                const p = player.current;
+                p.vy += GRAVITY;
+                p.y += p.vy;
 
-                const loop = () => {
-                    const player = playerRef.current;
-                    
-                    // 1. Apply Gravity
-                    player.vy += GRAVITY;
-                    player.y += player.vy;
+                if (inputs.current.left) p.x -= MOVEMENT_SPEED;
+                if (inputs.current.right) p.x += MOVEMENT_SPEED;
 
-                    // 2. Handle Movement
-                    if (inputRef.current.left) player.x -= MOVEMENT_SPEED;
-                    if (inputRef.current.right) player.x += MOVEMENT_SPEED;
+                // Wrap
+                if (p.x < -PLAYER_SIZE/2) p.x = SCREEN_WIDTH - PLAYER_SIZE/2;
+                if (p.x > SCREEN_WIDTH - PLAYER_SIZE/2) p.x = -PLAYER_SIZE/2;
 
-                    // Screen wrapping
-                    if (player.x < -PLAYER_SIZE / 2) player.x = width - PLAYER_SIZE / 2;
-                    if (player.x > width - PLAYER_SIZE / 2) player.x = -PLAYER_SIZE / 2;
+                // Camera
+                const targetY = p.y - (window.innerHeight * 0.6); 
+                if (targetY < camera.current.y) {
+                    camera.current.y = targetY;
+                    const newScore = Math.floor(-camera.current.y / 10);
+                    if(newScore > score) setScore(newScore);
+                }
 
-                    // 3. Camera Movement (Only moves up)
-                    const targetCameraY = player.y - height / 2;
-                    if (targetCameraY < cameraYRef.current) {
-                        cameraYRef.current = targetCameraY;
-                        setScore(s => Math.max(s, Math.floor(-cameraYRef.current / 10)));
-                    }
+                // Collision
+                if (p.vy > 0) {
+                    platforms.current.forEach(plat => {
+                        if (
+                            p.x + PLAYER_SIZE * 0.8 > plat.x && 
+                            p.x + PLAYER_SIZE * 0.2 < plat.x + PLATFORM_WIDTH &&
+                            p.y + PLAYER_SIZE >= plat.y &&
+                            p.y + PLAYER_SIZE <= plat.y + 15
+                        ) {
+                            p.vy = JUMP_FORCE;
+                            playJumpSound(); // Play sound effect
+                        }
+                    });
+                }
 
-                    // 4. Collision with Platforms
-                    // Only jump if falling downward
-                    if (player.vy > 0) {
-                        platformsRef.current.forEach(plat => {
-                            if (
-                                player.x + PLAYER_SIZE > plat.x &&
-                                player.x < plat.x + PLATFORM_WIDTH &&
-                                player.y + PLAYER_SIZE > plat.y &&
-                                player.y + PLAYER_SIZE < plat.y + PLATFORM_HEIGHT + player.vy
-                            ) {
-                                player.vy = JUMP_FORCE; // BOUNCE!
-                            }
-                        });
-                    }
+                // Platforms
+                platforms.current = platforms.current.filter(plat => plat.y < camera.current.y + window.innerHeight + 100);
+                const highestPlat = platforms.current[platforms.current.length - 1];
+                if (highestPlat && highestPlat.y > camera.current.y - 100) {
+                    platforms.current.push({
+                        id: Math.random(),
+                        x: Math.random() * (SCREEN_WIDTH - PLATFORM_WIDTH),
+                        y: highestPlat.y - (90 + Math.random() * 40)
+                    });
+                }
 
-                    // 5. Platform Management (Infinite generation)
-                    platformsRef.current = platformsRef.current.filter(p => p.y > cameraYRef.current - 100); // Remove old
-                    
-                    const highestPlatformY = platformsRef.current[platformsRef.current.length - 1].y;
-                    if (highestPlatformY > cameraYRef.current - height) {
-                        // Add new platform
-                        platformsRef.current.push({
-                            x: Math.random() * (width - PLATFORM_WIDTH),
-                            y: highestPlatformY - (80 + Math.random() * 60), // Random gap
-                            id: Math.random()
-                        });
-                    }
+                // Game Over
+                if (p.y > camera.current.y + window.innerHeight) {
+                    setHighScore(s => Math.max(s, Math.floor(-camera.current.y / 10)));
+                    setGameState('GAME_OVER');
+                }
 
-                    // 6. Game Over Check
-                    if (player.y > cameraYRef.current + height) {
-                        setGameState('GAME_OVER');
-                        setHighScore(prev => Math.max(prev, Math.floor(-cameraYRef.current / 10)));
-                    } else {
-                        gameLoopRef.current = requestAnimationFrame(loop);
-                    }
-                };
+                setTick(t => t + 1);
+                reqRef.current = requestAnimationFrame(update);
+            };
 
-                gameLoopRef.current = requestAnimationFrame(loop);
-
-                return () => cancelAnimationFrame(gameLoopRef.current);
+            useEffect(() => {
+                if (gameState === 'PLAYING') {
+                    reqRef.current = requestAnimationFrame(update);
+                }
+                return () => cancelAnimationFrame(reqRef.current);
             }, [gameState]);
 
-            // Render Helpers
-            const width = typeof window !== 'undefined' ? (window.innerWidth > 500 ? 400 : window.innerWidth) : 300;
-            const height = typeof window !== 'undefined' ? window.innerHeight : 600;
-
-            // Dynamic Styles based on camera
-            const getStyle = (obj) => ({
-                left: obj.x,
-                top: obj.y - cameraYRef.current,
-                width: obj.width || PLATFORM_WIDTH,
-                height: obj.height || PLATFORM_HEIGHT,
-                position: 'absolute'
-            });
-
+            // Controls
+            const handleTouch = (e) => {
+                e.preventDefault();
+                const touchX = e.touches[0].clientX;
+                const middle = window.innerWidth / 2;
+                if (touchX < middle) { inputs.current.left = true; inputs.current.right = false; }
+                else { inputs.current.left = false; inputs.current.right = true; }
+            };
+            const handleTouchEnd = () => { inputs.current.left = false; inputs.current.right = false; };
+            
             useEffect(() => {
-                window.addEventListener('keydown', handleKeyDown);
-                window.addEventListener('keyup', handleKeyUp);
-                return () => {
-                    window.removeEventListener('keydown', handleKeyDown);
-                    window.removeEventListener('keyup', handleKeyUp);
-                };
+                const down = (e) => { if(e.key === 'ArrowLeft') inputs.current.left = true; if(e.key === 'ArrowRight') inputs.current.right = true; };
+                const up = (e) => { if(e.key === 'ArrowLeft') inputs.current.left = false; if(e.key === 'ArrowRight') inputs.current.right = false; };
+                window.addEventListener('keydown', down);
+                window.addEventListener('keyup', up);
+                return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); }
             }, []);
 
             return (
-                <div 
-                    className="w-full h-screen bg-gray-900 flex justify-center overflow-hidden"
-                    onTouchStart={handleTouchStart}
-                    onTouchEnd={handleTouchEnd}
-                >
+                <div className="w-full h-screen flex justify-center bg-gray-900">
                     <div 
-                        ref={containerRef}
-                        className="relative bg-sky-900 shadow-2xl overflow-hidden"
-                        style={{ width: width, height: height }}
+                        className="relative overflow-hidden bg-sky-900 shadow-2xl"
+                        style={{ width: SCREEN_WIDTH, height: '100%' }}
+                        onTouchStart={handleTouch}
+                        onTouchEnd={handleTouchEnd}
+                        onTouchMove={handleTouch}
                     >
-                        {/* Background Elements */}
-                        <div className="absolute inset-0 opacity-30" 
-                            style={{backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)', backgroundSize: '20px 20px'}}>
+                        {/* Stars */}
+                        <div className="absolute inset-0 opacity-40" 
+                            style={{
+                                background: 'radial-gradient(white 1px, transparent 1px)',
+                                backgroundSize: '30px 30px',
+                                transform: `translateY(${camera.current.y * 0.5}px)` 
+                            }} 
+                        />
+
+                        {platforms.current.map(plat => (
+                            <div key={plat.id} style={{ position: 'absolute', left: plat.x, top: plat.y - camera.current.y, width: PLATFORM_WIDTH, height: PLATFORM_HEIGHT }}>
+                                <PlatformIcon />
+                            </div>
+                        ))}
+                        
+                        <div style={{ position: 'absolute', left: player.current.x, top: player.current.y - camera.current.y, width: PLAYER_SIZE, height: PLAYER_SIZE }}>
+                            <HeroIcon />
                         </div>
 
+                        {/* Score */}
+                        {gameState === 'PLAYING' && (
+                            <div className="absolute top-4 left-4 bg-black/30 px-3 py-1 rounded text-white font-bold text-xl border border-white/20 backdrop-blur-sm">
+                                {Math.floor(-camera.current.y / 10)}m
+                            </div>
+                        )}
+                        
+                        {/* SFX Mute Toggle */}
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); toggleMute(); }}
+                            className="absolute top-4 right-4 z-50 p-2 bg-black/40 rounded-full border border-white/20 hover:bg-black/60"
+                        >
+                            <SpeakerIcon muted={isMuted} />
+                        </button>
+
+                        {/* Start Screen */}
                         {gameState === 'START' && (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center z-50 bg-black/50 text-white">
-                                <h1 className="text-4xl font-bold text-yellow-400 mb-4 drop-shadow-md">Sky Ascender</h1>
-                                <p className="mb-8 text-gray-200">Tap Left/Right to Move</p>
-                                <button 
-                                    onClick={startGame}
-                                    className="px-8 py-4 bg-green-500 rounded-full text-xl font-bold hover:bg-green-400 transition transform active:scale-95 shadow-lg border-b-4 border-green-700"
-                                >
-                                    PLAY
+                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 text-white z-40">
+                                <h1 className="text-5xl font-bold text-yellow-400 mb-2 drop-shadow-lg">SKY HOP</h1>
+                                <p className="text-gray-300 mb-8">Tap Left/Right to Jump</p>
+                                <button onClick={initGame} className="px-10 py-4 bg-green-500 rounded-full text-2xl font-bold shadow-[0_4px_0_rgb(21,128,61)] active:shadow-none active:translate-y-1 transition-all">
+                                    START
                                 </button>
                             </div>
                         )}
 
+                        {/* Game Over */}
                         {gameState === 'GAME_OVER' && (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center z-50 bg-red-900/80 text-white">
-                                <h2 className="text-3xl font-bold mb-2">FALLEN!</h2>
-                                <div className="text-6xl font-black mb-4 text-yellow-300">{score}</div>
-                                <p className="text-gray-300 mb-8">Best: {highScore}</p>
-                                <button 
-                                    onClick={startGame}
-                                    className="px-8 py-4 bg-blue-500 rounded-full text-xl font-bold hover:bg-blue-400 transition shadow-lg border-b-4 border-blue-700"
-                                >
+                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-900/90 text-white z-40">
+                                <h2 className="text-4xl font-bold mb-2">FALLEN!</h2>
+                                <div className="text-6xl font-black text-yellow-300 mb-2">{highScore}m</div>
+                                <p className="text-gray-300 mb-8">Best Score</p>
+                                <button onClick={initGame} className="px-10 py-4 bg-blue-500 rounded-full text-2xl font-bold shadow-[0_4px_0_rgb(29,78,216)] active:shadow-none active:translate-y-1 transition-all">
                                     TRY AGAIN
                                 </button>
                             </div>
-                        )}
-
-                        {/* HUD */}
-                        {gameState === 'PLAYING' && (
-                            <div className="absolute top-4 left-4 text-white font-bold text-2xl drop-shadow-md z-40 font-mono">
-                                {score}m
-                            </div>
-                        )}
-
-                        {/* Game World */}
-                        {gameState === 'PLAYING' && (
-                            <>
-                                {/* Player */}
-                                <div 
-                                    style={{
-                                        position: 'absolute',
-                                        left: playerRef.current?.x || 0,
-                                        top: (playerRef.current?.y || 0) - cameraYRef.current,
-                                        width: PLAYER_SIZE,
-                                        height: PLAYER_SIZE
-                                    }}
-                                >
-                                    <HeroIcon />
-                                </div>
-
-                                {/* Platforms */}
-                                {platformsRef.current.map(plat => (
-                                    <div key={plat.id} style={getStyle(plat)}>
-                                        <PlatformIcon />
-                                    </div>
-                                ))}
-                            </>
                         )}
                     </div>
                 </div>
@@ -285,4 +304,5 @@
     </script>
 </body>
 </html>
+
 
