@@ -203,6 +203,55 @@
             </svg>
         );
 
+        const SpaceLayer = React.memo(({ cameraY }) => {
+            const items = React.useMemo(() => {
+                const stars = Array.from({length: 50}, () => ({
+                    left: Math.random() * 100,
+                    top: Math.random() * 100,
+                    size: Math.random() * 3 + 1,
+                    color: Math.random() > 0.7 ? '#fde047' : 'white',
+                    speed: Math.random() * 0.5 + 0.1
+                }));
+                const planets = Array.from({length: 3}, () => ({
+                    left: Math.random() * 90,
+                    top: Math.random() * 100,
+                    size: Math.random() * 60 + 30,
+                    hue: Math.random() * 360,
+                    speed: Math.random() * 0.2 + 0.05
+                }));
+                return { stars, planets };
+            }, []);
+
+            return (
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    {items.stars.map((s, i) => (
+                        <div key={i} className="absolute rounded-full"
+                            style={{
+                                left: `${s.left}%`,
+                                top: `${((s.top + cameraY * s.speed * 0.05) % 100 + 100) % 100}%`,
+                                width: s.size,
+                                height: s.size,
+                                backgroundColor: s.color,
+                                boxShadow: `0 0 ${s.size}px ${s.color}`,
+                                opacity: Math.random() * 0.5 + 0.5
+                        }}
+                        />
+                    ))}
+                    {items.planets.map((p, i) => (
+                        <div key={`p-${i}`} className="absolute rounded-full opacity-40"
+                            style={{
+                                left: `${p.left}%`,
+                                top: `${((p.top + cameraY * p.speed * 0.02) % 100 + 100) % 100}%`,
+                                width: p.size,
+                                height: p.size,
+                                background: `radial-gradient(circle at 30% 30%, hsl(${p.hue}, 70%, 60%), hsl(${p.hue}, 70%, 20%))`
+                            }}
+                        />
+                    ))}
+                </div>
+            );
+        });
+
         const App = () => {
             const [gameState, setGameState] = useState('START');
             const [score, setScore] = useState(0);
@@ -213,7 +262,15 @@
             const [showShop, setShowShop] = useState(false);
             const [ownedSkins, setOwnedSkins] = useState(['default']);
             const [currentSkin, setCurrentSkin] = useState('default');
+            const [theme, setTheme] = useState('SKY');
             const [, setTick] = useState(0); // Force render
+
+            useEffect(() => {
+                const timer = setInterval(() => {
+                    setTheme(prev => prev === 'SKY' ? 'SPACE' : 'SKY');
+                }, 20000);
+                return () => clearInterval(timer);
+            }, []);
 
             const SKINS = [
                 { id: 'default', name: 'Mr. Bounce', price: 0, Component: HeroIcon },
@@ -477,20 +534,23 @@
             return (
                 <div className="w-full h-screen flex justify-center bg-gray-900">
                     <div 
-                        className="relative overflow-hidden bg-sky-900 shadow-2xl"
+                        className={`relative overflow-hidden shadow-2xl transition-colors duration-1000 ${theme === 'SPACE' ? 'bg-black' : 'bg-sky-900'}`}
                         style={{ width: SCREEN_WIDTH, height: '100%' }}
                         onTouchStart={handleTouch}
                         onTouchEnd={handleTouchEnd}
                         onTouchMove={handleTouch}
                     >
-                        {/* Stars */}
-                        <div className="absolute inset-0 opacity-40" 
-                            style={{
-                                background: 'radial-gradient(white 1px, transparent 1px)',
-                                backgroundSize: '30px 30px',
-                                backgroundPosition: `0px ${camera.current.y * 0.5}px`
-                            }} 
-                        />
+                        {/* Background Layers */}
+                        {theme === 'SKY' && (
+                            <div className="absolute inset-0 opacity-40 transition-opacity duration-1000" 
+                                style={{
+                                    background: 'radial-gradient(white 1px, transparent 1px)',
+                                    backgroundSize: '30px 30px',
+                                    backgroundPosition: `0px ${camera.current.y * 0.5}px`
+                                }} 
+                            />
+                        )}
+                        {theme === 'SPACE' && <SpaceLayer cameraY={camera.current.y} />}
 
                         {platforms.current.map(plat => (
                             <div key={plat.id} style={{ position: 'absolute', left: plat.x, top: plat.y - camera.current.y, width: PLATFORM_WIDTH, height: PLATFORM_HEIGHT }}>
