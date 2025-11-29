@@ -84,6 +84,7 @@
             const boosterEndTime = useRef(0);
             const camera = useRef({ y: 0 });
             const inputs = useRef({ left: false, right: false });
+            const isMutedRef = useRef(false);
             const reqRef = useRef(); 
             
             // Audio Context Ref
@@ -105,7 +106,7 @@
 
             // Play Synthesized Jump Sound
             const playJumpSound = () => {
-                if (isMuted || !audioCtxRef.current) return;
+                if (isMutedRef.current || !audioCtxRef.current) return;
 
                 const ctx = audioCtxRef.current;
                 const osc = ctx.createOscillator();
@@ -128,7 +129,10 @@
             };
 
             const toggleMute = () => {
-                setIsMuted(!isMuted);
+                setIsMuted(prev => {
+                    isMutedRef.current = !prev;
+                    return !prev;
+                });
             };
 
             // Start Game
@@ -233,10 +237,16 @@
 
                     // Spawn Coin (30% chance)
                     if (Math.random() < 0.3) {
+                        // Randomize position: anywhere horizontally, and vertically between the two platforms
+                        const coinX = Math.random() * (SCREEN_WIDTH - 30);
+                        const minY = newY - 50; // Highest point (visually)
+                        const maxY = highestPlat.y - 60; // Lowest point (visually)
+                        const coinY = minY + Math.random() * (maxY - minY);
+
                         coinsRef.current.push({
                             id: Math.random(),
-                            x: newX + PLATFORM_WIDTH/2 - 15,
-                            y: newY - 40,
+                            x: coinX,
+                            y: coinY,
                             collected: false
                         });
                     }
@@ -327,6 +337,7 @@
                         {gameState === 'PLAYING' && (
                             <button 
                                 onClick={(e) => { e.stopPropagation(); setShowShop(true); }}
+                                onTouchStart={(e) => e.stopPropagation()}
                                 className="absolute top-16 right-4 z-50 p-2 bg-purple-600 rounded-full border border-white/20 hover:bg-purple-500 text-white font-bold text-xs shadow-lg"
                             >
                                 SHOP
@@ -335,7 +346,7 @@
 
                         {/* Shop Modal */}
                         {showShop && (
-                            <div className="absolute inset-0 bg-black/80 z-[60] flex items-center justify-center p-4" onClick={(e) => e.stopPropagation()}>
+                            <div className="absolute inset-0 bg-black/80 z-[60] flex items-center justify-center p-4" onClick={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()}>
                                 <div className="bg-gray-800 p-6 rounded-xl border border-gray-600 w-full max-w-sm shadow-2xl">
                                     <div className="flex justify-between items-center mb-4">
                                         <h2 className="text-2xl font-bold text-white">Item Shop</h2>
@@ -364,6 +375,7 @@
                         {/* SFX Mute Toggle */}
                         <button 
                             onClick={(e) => { e.stopPropagation(); toggleMute(); }}
+                            onTouchStart={(e) => e.stopPropagation()}
                             className="absolute top-4 right-4 z-50 p-2 bg-black/40 rounded-full border border-white/20 hover:bg-black/60"
                         >
                             <SpeakerIcon muted={isMuted} />
@@ -372,8 +384,8 @@
                         {/* Start Screen */}
                         {gameState === 'START' && (
                             <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 text-white z-40">
-                                <h1 className="text-5xl font-bold text-yellow-400 mb-2 drop-shadow-lg">SKY HOP</h1>
-                                <p className="text-gray-300 mb-8">Tap Left/Right to Jump</p>
+                                <h1 className="text-5xl font-bold text-yellow-400 mb-2 drop-shadow-lg">SKY ASCENDER</h1>
+                                <p className="text-gray-300 mb-8">Hold Left/Right to Jump</p>
                                 <button onClick={initGame} className="px-10 py-4 bg-green-500 rounded-full text-2xl font-bold shadow-[0_4px_0_rgb(21,128,61)] active:shadow-none active:translate-y-1 transition-all">
                                     START
                                 </button>
