@@ -179,6 +179,12 @@
             </svg>
         );
 
+        const HeartIcon = () => (
+            <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-red-500 drop-shadow-md">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+            </svg>
+        );
+
         const SpeakerIcon = ({ muted }) => (
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8 text-white drop-shadow-md">
                 {muted ? (
@@ -195,6 +201,7 @@
             const [highScore, setHighScore] = useState(0);
             const [isMuted, setIsMuted] = useState(false);
             const [coins, setCoins] = useState(0);
+            const [lives, setLives] = useState(3);
             const [showShop, setShowShop] = useState(false);
             const [ownedSkins, setOwnedSkins] = useState(['default']);
             const [currentSkin, setCurrentSkin] = useState('default');
@@ -216,9 +223,8 @@
             const camera = useRef({ y: 0 });
             const inputs = useRef({ left: false, right: false });
             const isMutedRef = useRef(false);
-            const reqRef = useRef(); 
-            
-            // Audio Context Ref
+            const livesRef = useRef(3);
+            const reqRef = useRef();              // Audio Context Ref
             const audioCtxRef = useRef(null);
 
             // Initialize Audio Engine
@@ -275,6 +281,8 @@
                 player.current = { x: SCREEN_WIDTH / 2 - PLAYER_SIZE/2, y: startY - 100, vx: 0, vy: JUMP_FORCE };
                 camera.current.y = 0;
                 setScore(0);
+                setLives(3);
+                livesRef.current = 3;
                 // setCoins(0);
 
                 let newPlatforms = [];
@@ -396,8 +404,37 @@
 
                 // Game Over
                 if (p.y > camera.current.y + window.innerHeight) {
-                    setHighScore(s => Math.max(s, Math.floor(-camera.current.y / 10)));
-                    setGameState('GAME_OVER');
+                    if (livesRef.current > 1) {
+                        livesRef.current -= 1;
+                        setLives(livesRef.current);
+                        
+                        // Respawn logic: Find a platform closest to the lower-middle of the screen
+                        // This prevents the camera from jumping up and artificially increasing the score
+                        const targetRespawnY = camera.current.y + window.innerHeight * 0.75;
+                        let bestPlat = platforms.current[0]; 
+                        let minDiff = Infinity;
+
+                        for (const plat of platforms.current) {
+                            const diff = Math.abs(plat.y - targetRespawnY);
+                            if (diff < minDiff) {
+                                minDiff = diff;
+                                bestPlat = plat;
+                            }
+                        }
+
+                        if (bestPlat) {
+                            p.x = bestPlat.x + PLATFORM_WIDTH / 2 - PLAYER_SIZE / 2;
+                            p.y = bestPlat.y - PLAYER_SIZE - 5;
+                            p.vy = 0;
+                        } else {
+                            // Fallback if no platforms found (rare)
+                            p.y = camera.current.y + window.innerHeight / 2;
+                            p.vy = 0;
+                        }
+                    } else {
+                        setHighScore(s => Math.max(s, Math.floor(-camera.current.y / 10)));
+                        setGameState('GAME_OVER');
+                    }
                 }
 
                 setTick(t => t + 1);
@@ -468,12 +505,19 @@
 
                         {/* HUD */}
                         {gameState === 'PLAYING' && (
-                            <div className="absolute top-4 left-4 flex gap-2">
-                                <div className="bg-black/30 px-3 py-1 rounded text-white font-bold text-xl border border-white/20 backdrop-blur-sm">
-                                    {Math.floor(-camera.current.y / 10)}m
+                            <div className="absolute top-4 left-4 flex flex-col gap-2">
+                                <div className="flex gap-2">
+                                    <div className="bg-black/30 px-3 py-1 rounded text-white font-bold text-xl border border-white/20 backdrop-blur-sm">
+                                        {Math.floor(-camera.current.y / 10)}m
+                                    </div>
+                                    <div className="bg-yellow-500/80 px-3 py-1 rounded text-white font-bold text-xl border border-yellow-300/50 backdrop-blur-sm flex items-center gap-1">
+                                        <span>$</span> {coins}
+                                    </div>
                                 </div>
-                                <div className="bg-yellow-500/80 px-3 py-1 rounded text-white font-bold text-xl border border-yellow-300/50 backdrop-blur-sm flex items-center gap-1">
-                                    <span>$</span> {coins}
+                                <div className="flex gap-1">
+                                    {[...Array(lives)].map((_, i) => (
+                                        <HeartIcon key={i} />
+                                    ))}
                                 </div>
                             </div>
                         )}
