@@ -18,6 +18,14 @@
         }
         /* Disable blue highlight on tap */
         * { -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+
+        @keyframes scale-up-down {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .animate-scale {
+            animation: scale-up-down 2s ease-in-out infinite;
+        }
     </style>
 </head>
 <body>
@@ -208,11 +216,11 @@
             const [, setTick] = useState(0); // Force render
 
             const SKINS = [
-                { id: 'default', name: 'Blue Smiley', price: 0, Component: HeroIcon },
-                { id: 'cat', name: 'Cat', price: 12, Component: CatIcon },
-                { id: 'dog', name: 'Dog', price: 12, Component: DogIcon },
-                { id: 'rocket', name: 'Rocket', price: 15, Component: RocketIcon },
-                { id: 'ninja', name: 'Ninja', price: 17, Component: NinjaIcon },
+                { id: 'default', name: 'Mr. Bounce', price: 0, Component: HeroIcon },
+                { id: 'cat', name: 'Meow-teor', price: 12, Component: CatIcon },
+                { id: 'dog', name: 'Bark-stonaut', price: 12, Component: DogIcon },
+                { id: 'rocket', name: 'Zoom-Tube', price: 15, Component: RocketIcon },
+                { id: 'ninja', name: 'Jump-Jiutsu', price: 17, Component: NinjaIcon },
             ];
 
             // Refs
@@ -527,19 +535,92 @@
                             <button 
                                 onClick={(e) => { e.stopPropagation(); setShowShop(true); }}
                                 onTouchStart={(e) => e.stopPropagation()}
-                                className="absolute top-16 right-4 z-50 p-2 bg-purple-600 rounded-full border border-white/20 hover:bg-purple-500 text-white font-bold text-xs shadow-lg"
+                                className="absolute top-20 right-5 z-50 p-2 hover:bg-purple-500 text-white font-bold text-xs shadow-lg hover:scale-110 transition-transform bg-black/30 rounded border border-white/20 backdrop-blur-sm"
                             >
-                                SHOP
+                                <svg viewBox="0 0 100 100" className="w-6 h-6 filter drop-shadow-md">
+                                          {/* Awning/canopy stripes */}
+                                          <path d="M 15 30 Q 50 20 85 30 L 85 40 Q 50 30 15 40 Z" 
+                                                fill="#ef4444" stroke="#dc2626" strokeWidth="2" />
+                                          <path d="M 25 30 Q 50 22 75 30 L 75 40 Q 50 32 25 40 Z" 
+                                                fill="#fca5a5" opacity="0.6" />
+                                          
+                                          {/* Awning scalloped edge */}
+                                          <path d="M 15 40 Q 20 45 25 40 Q 30 45 35 40 Q 40 45 45 40 Q 50 45 55 40 Q 60 45 65 40 Q 70 45 75 40 Q 80 45 85 40" 
+                                                fill="#dc2626" stroke="#b91c1c" strokeWidth="1" />
+                                          
+                                          {/* Building main structure */}
+                                          <rect x="20" y="45" width="60" height="45" fill="#fef3c7" stroke="#d97706" strokeWidth="2" />
+                                          
+                                          {/* Door */}
+                                          <rect x="42" y="65" width="16" height="25" fill="#92400e" stroke="#78350f" strokeWidth="2" rx="1" />
+                                          <circle cx="53" cy="77" r="1.5" fill="#fbbf24" />
+                                          
+                                          {/* Door window */}
+                                          <rect x="45" y="68" width="10" height="8" fill="#bfdbfe" stroke="#78350f" strokeWidth="1" />
+                                          <line x1="50" y1="68" x2="50" y2="76" stroke="#78350f" strokeWidth="0.5" />
+                                          <line x1="45" y1="72" x2="55" y2="72" stroke="#78350f" strokeWidth="0.5" />
+                                          
+                                          {/* Left window */}
+                                          <rect x="25" y="52" width="12" height="14" fill="#bfdbfe" stroke="#3b82f6" strokeWidth="2" rx="1" />
+                                          <line x1="31" y1="52" x2="31" y2="66" stroke="#3b82f6" strokeWidth="1" />
+                                          <line x1="25" y1="59" x2="37" y2="59" stroke="#3b82f6" strokeWidth="1" />
+                                          
+                                          {/* Right window */}
+                                          <rect x="63" y="52" width="12" height="14" fill="#bfdbfe" stroke="#3b82f6" strokeWidth="2" rx="1" />
+                                          <line x1="69" y1="52" x2="69" y2="66" stroke="#3b82f6" strokeWidth="1" />
+                                          <line x1="63" y1="59" x2="75" y2="59" stroke="#3b82f6" strokeWidth="1" />
+                                          
+                                          {/* Window display items */}
+                                          <circle cx="31" cy="59" r="3" fill="#fbbf24" opacity="0.7" />
+                                          <rect x="67" y="56" width="4" height="6" fill="#ec4899" opacity="0.7" />
+                                          
+                                          {/* Shop sign */}
+                                          <rect x="35" y="48" width="30" height="8" fill="#1e3a8a" stroke="#1e40af" strokeWidth="1" rx="1" />
+                                          <text x="50" y="54" fontSize="6" fill="#fef3c7" textAnchor="middle" fontWeight="bold">SHOP</text>
+                                          
+                                          {/* Brick details */}
+                                          <line x1="20" y1="55" x2="42" y2="55" stroke="#d97706" strokeWidth="0.5" opacity="0.5" />
+                                          <line x1="58" y1="55" x2="80" y2="55" stroke="#d97706" strokeWidth="0.5" opacity="0.5" />
+                                          <line x1="20" y1="75" x2="42" y2="75" stroke="#d97706" strokeWidth="0.5" opacity="0.5" />
+                                          <line x1="58" y1="75" x2="80" y2="75" stroke="#d97706" strokeWidth="0.5" opacity="0.5" />
+                                          
+                                          {/* Sidewalk */}
+                                          <rect x="10" y="90" width="80" height="8" fill="#94a3b8" stroke="#64748b" strokeWidth="1" />
+                                          <line x1="10" y1="94" x2="90" y2="94" stroke="#64748b" strokeWidth="0.5" />
+                                          
+                                          {/* Potted plant decoration - left */}
+                                          <rect x="22" y="82" width="6" height="8" fill="#b91c1c" stroke="#991b1b" strokeWidth="1" />
+                                          <circle cx="25" cy="80" r="4" fill="#22c55e" />
+                                          <circle cx="23" cy="78" r="2" fill="#16a34a" />
+                                          <circle cx="27" cy="78" r="2" fill="#16a34a" />
+                                          
+                                          {/* Potted plant decoration - right */}
+                                          <rect x="72" y="82" width="6" height="8" fill="#b91c1c" stroke="#991b1b" strokeWidth="1" />
+                                          <circle cx="75" cy="80" r="4" fill="#22c55e" />
+                                          <circle cx="73" cy="78" r="2" fill="#16a34a" />
+                                          <circle cx="77" cy="78" r="2" fill="#16a34a" />
+                                        </svg>
                             </button>
                         )}
 
                         {/* Shop Modal */}
                         {showShop && (
-                            <div className="absolute inset-0 bg-black/80 z-[60] flex items-center justify-center p-4" onClick={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()}>
-                                <div className="bg-gray-800 p-6 rounded-xl border border-gray-600 w-full max-w-sm shadow-2xl max-h-[80vh] overflow-y-auto">
-                                    <div className="flex justify-between items-center mb-4 sticky top-0 bg-gray-800 pb-2 border-b border-gray-700">
-                                        <h2 className="text-2xl font-bold text-white">Item Shop</h2>
-                                        <button onClick={() => setShowShop(false)} className="text-gray-400 hover:text-white">✕</button>
+                            <div 
+                                className="absolute inset-0 bg-black/80 z-[60] flex items-center justify-center p-4" 
+                                onClick={(e) => e.stopPropagation()} 
+                                onTouchStart={(e) => e.stopPropagation()}
+                                onTouchMove={(e) => e.stopPropagation()}
+                                onTouchEnd={(e) => e.stopPropagation()}
+                            >
+                                <div className="bg-gray-800 p-6 rounded-xl border border-gray-600 w-full max-w-sm shadow-2xl max-h-[80vh] overflow-y-auto" style={{ touchAction: 'pan-y' }}>
+                                    <div className="flex flex-col justify-between items-left mb-4 top-0 bg-gray-800 pb-2 border-b border-gray-700">
+                                        <div className="flex justify-between items-center top-0 pb-2">
+                                            <h2 className="text-2xl font-bold text-white">Sky Bazaar</h2>
+                                            <button onClick={() => setShowShop(false)} className="text-gray-400 hover:text-white">✕</button>
+                                        </div>
+                                        <div className="text-left text-gray-400 text-sm bottom-0">
+                                            Balance: <span className="text-yellow-400 font-bold">{coins} $</span>
+                                        </div>
                                     </div>
                                     
                                     {/* Boosters Section */}
@@ -604,9 +685,7 @@
                                         </div>
                                     </div>
 
-                                    <div className="text-center mt-6 pt-4 border-t border-gray-700 text-gray-400 text-sm sticky bottom-0 bg-gray-800">
-                                        Your Balance: <span className="text-yellow-400 font-bold">{coins} $</span>
-                                    </div>
+                                    <div className="text-center mt-6 pt-4 border-t border-gray-700 text-gray-400 text-sm bottom-0 bg-gray-800"></div>
                                 </div>
                             </div>
                         )}
@@ -622,12 +701,14 @@
 
                         {/* Start Screen */}
                         {gameState === 'START' && (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 text-white z-40">
-                                <h1 className="text-5xl font-bold text-yellow-400 mb-2 drop-shadow-lg">SKY ASCENDER</h1>
-                                <p className="text-gray-300 mb-8">Hold Left/Right to Jump</p>
-                                <button onClick={initGame} className="px-10 py-4 bg-green-500 rounded-full text-2xl font-bold shadow-[0_4px_0_rgb(21,128,61)] active:shadow-none active:translate-y-1 transition-all">
-                                    START
-                                </button>
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/70 text-white z-40">
+                                <div className="flex flex-col items-center">
+                                    <h1 className="text-5xl font-bold text-yellow-400 mb-2 drop-shadow-lg">SKY ASCENDER</h1>
+                                    <p className="text-gray-300 mb-8">Hold Left/Right to Jump</p>
+                                    <button onClick={initGame} className="px-10 py-4 bg-green-500 rounded-full text-2xl font-bold shadow-[0_4px_0_rgb(21,128,61)] active:shadow-none active:translate-y-1 transition-all animate-pulse animate-scale">
+                                        START
+                                    </button>
+                                </div>
                             </div>
                         )}
 
@@ -637,7 +718,7 @@
                                 <h2 className="text-4xl font-bold mb-2">FALLEN!</h2>
                                 <div className="text-6xl font-black text-yellow-300 mb-2">{highScore}m</div>
                                 <p className="text-gray-300 mb-8">Best Score</p>
-                                <button onClick={initGame} className="px-10 py-4 bg-blue-500 rounded-full text-2xl font-bold shadow-[0_4px_0_rgb(29,78,216)] active:shadow-none active:translate-y-1 transition-all">
+                                <button onClick={initGame} className="px-10 py-4 bg-blue-500 rounded-full text-2xl font-bold shadow-[0_4px_0_rgb(29,78,216)] active:shadow-none active:translate-y-1 transition-all animate-pulse animate-scale">
                                     TRY AGAIN
                                 </button>
                             </div>
