@@ -51,6 +51,13 @@
             <div className="w-full h-full bg-gradient-to-b from-green-400 to-green-600 rounded-md border-t-4 border-green-300 shadow-lg"></div>
         );
 
+        const CoinIcon = () => (
+            <svg viewBox="0 0 100 100" className="w-full h-full filter drop-shadow-md animate-pulse">
+                <circle cx="50" cy="50" r="45" fill="#fbbf24" stroke="#d97706" strokeWidth="5" />
+                <text x="50" y="72" fontSize="60" textAnchor="middle" fill="#92400e" fontWeight="bold" fontFamily="sans-serif">$</text>
+            </svg>
+        );
+
         const SpeakerIcon = ({ muted }) => (
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8 text-white drop-shadow-md">
                 {muted ? (
@@ -66,11 +73,15 @@
             const [score, setScore] = useState(0);
             const [highScore, setHighScore] = useState(0);
             const [isMuted, setIsMuted] = useState(false);
+            const [coins, setCoins] = useState(0);
+            const [showShop, setShowShop] = useState(false);
             const [, setTick] = useState(0); // Force render
 
             // Refs
             const player = useRef({ x: SCREEN_WIDTH / 2, y: 0, vx: 0, vy: 0 });
             const platforms = useRef([]);
+            const coinsRef = useRef([]);
+            const boosterEndTime = useRef(0);
             const camera = useRef({ y: 0 });
             const inputs = useRef({ left: false, right: false });
             const reqRef = useRef(); 
@@ -142,7 +153,16 @@
                 newPlatforms[0].y = startY;
                 
                 platforms.current = newPlatforms;
+                coinsRef.current = [];
                 setGameState('PLAYING');
+            };
+
+            const buyBooster = () => {
+                if (coins >= 57) {
+                    setCoins(c => c - 57);
+                    boosterEndTime.current = Date.now() + 10000;
+                    setShowShop(false);
+                }
             };
 
             // Game Loop
@@ -177,21 +197,49 @@
                             p.y + PLAYER_SIZE >= plat.y &&
                             p.y + PLAYER_SIZE <= plat.y + 15
                         ) {
-                            p.vy = JUMP_FORCE;
+                            const isBoosted = Date.now() < boosterEndTime.current;
+                            p.vy = isBoosted ? JUMP_FORCE * 1.45 : JUMP_FORCE;
                             playJumpSound(); // Play sound effect
                         }
                     });
                 }
 
+                // Coin Collision
+                coinsRef.current.forEach(coin => {
+                    if (!coin.collected && 
+                        p.x < coin.x + 30 &&
+                        p.x + PLAYER_SIZE > coin.x &&
+                        p.y < coin.y + 30 &&
+                        p.y + PLAYER_SIZE > coin.y
+                    ) {
+                        coin.collected = true;
+                        setCoins(c => c + 1);
+                    }
+                });
+
                 // Platforms
                 platforms.current = platforms.current.filter(plat => plat.y < camera.current.y + window.innerHeight + 100);
+                coinsRef.current = coinsRef.current.filter(c => !c.collected && c.y < camera.current.y + window.innerHeight + 100);
+
                 const highestPlat = platforms.current[platforms.current.length - 1];
                 if (highestPlat && highestPlat.y > camera.current.y - 100) {
+                    const newY = highestPlat.y - (75 + Math.random() * 35);
+                    const newX = Math.random() * (SCREEN_WIDTH - PLATFORM_WIDTH);
                     platforms.current.push({
                         id: Math.random(),
-                        x: Math.random() * (SCREEN_WIDTH - PLATFORM_WIDTH),
-                        y: highestPlat.y - (75 + Math.random() * 35)
+                        x: newX,
+                        y: newY
                     });
+
+                    // Spawn Coin (30% chance)
+                    if (Math.random() < 0.3) {
+                        coinsRef.current.push({
+                            id: Math.random(),
+                            x: newX + PLATFORM_WIDTH/2 - 15,
+                            y: newY - 40,
+                            collected: false
+                        });
+                    }
                 }
 
                 // Game Over
@@ -252,15 +300,64 @@
                                 <PlatformIcon />
                             </div>
                         ))}
+
+                        {coinsRef.current.map(coin => (
+                            <div key={coin.id} style={{ position: 'absolute', left: coin.x, top: coin.y - camera.current.y, width: 30, height: 30 }}>
+                                <CoinIcon />
+                            </div>
+                        ))}
                         
                         <div style={{ position: 'absolute', left: player.current.x, top: player.current.y - camera.current.y, width: PLAYER_SIZE, height: PLAYER_SIZE }}>
                             <HeroIcon />
                         </div>
 
-                        {/* Score */}
+                        {/* HUD */}
                         {gameState === 'PLAYING' && (
-                            <div className="absolute top-4 left-4 bg-black/30 px-3 py-1 rounded text-white font-bold text-xl border border-white/20 backdrop-blur-sm">
-                                {Math.floor(-camera.current.y / 10)}m
+                            <div className="absolute top-4 left-4 flex gap-2">
+                                <div className="bg-black/30 px-3 py-1 rounded text-white font-bold text-xl border border-white/20 backdrop-blur-sm">
+                                    {Math.floor(-camera.current.y / 10)}m
+                                </div>
+                                <div className="bg-yellow-500/80 px-3 py-1 rounded text-white font-bold text-xl border border-yellow-300/50 backdrop-blur-sm flex items-center gap-1">
+                                    <span>$</span> {coins}
+                                </div>
+                            </div>
+                        )}
+                        
+                        {/* Shop Button */}
+                        {gameState === 'PLAYING' && (
+                            <button 
+                                onClick={(e) => { e.stopPropagation(); setShowShop(true); }}
+                                className="absolute top-16 right-4 z-50 p-2 bg-purple-600 rounded-full border border-white/20 hover:bg-purple-500 text-white font-bold text-xs shadow-lg"
+                            >
+                                SHOP
+                            </button>
+                        )}
+
+                        {/* Shop Modal */}
+                        {showShop && (
+                            <div className="absolute inset-0 bg-black/80 z-[60] flex items-center justify-center p-4" onClick={(e) => e.stopPropagation()}>
+                                <div className="bg-gray-800 p-6 rounded-xl border border-gray-600 w-full max-w-sm shadow-2xl">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <h2 className="text-2xl font-bold text-white">Item Shop</h2>
+                                        <button onClick={() => setShowShop(false)} className="text-gray-400 hover:text-white">✕</button>
+                                    </div>
+                                    <div className="bg-gray-700 p-4 rounded-lg flex justify-between items-center mb-2">
+                                        <div>
+                                            <h3 className="text-yellow-400 font-bold text-lg">Jump Booster</h3>
+                                            <p className="text-gray-300 text-xs">Double jump height (10s)</p>
+                                        </div>
+                                        <button 
+                                            onClick={buyBooster}
+                                            disabled={coins < 57}
+                                            className={`px-4 py-2 rounded font-bold ${coins >= 57 ? 'bg-green-500 hover:bg-green-400 text-white' : 'bg-gray-500 text-gray-300 cursor-not-allowed'}`}
+                                        >
+                                            57 $
+                                        </button>
+                                    </div>
+                                    <div className="text-center mt-4 text-gray-400 text-sm">
+                                        Your Balance: <span className="text-yellow-400 font-bold">{coins} $</span>
+                                    </div>
+                                </div>
                             </div>
                         )}
                         
