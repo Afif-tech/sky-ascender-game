@@ -144,6 +144,7 @@
                 player.current = { x: SCREEN_WIDTH / 2 - PLAYER_SIZE/2, y: startY - 100, vx: 0, vy: JUMP_FORCE };
                 camera.current.y = 0;
                 setScore(0);
+                setCoins(0);
 
                 let newPlatforms = [];
                 for (let i = 0; i < 15; i++) {
@@ -162,8 +163,8 @@
             };
 
             const buyBooster = () => {
-                if (coins >= 57) {
-                    setCoins(c => c - 57);
+                if (coins >= 20) {
+                    setCoins(c => c - 20);
                     boosterEndTime.current = Date.now() + 10000;
                     setShowShop(false);
                 }
@@ -235,8 +236,8 @@
                         y: newY
                     });
 
-                    // Spawn Coin (30% chance)
-                    if (Math.random() < 0.3) {
+                    // Spawn Coin (45% chance)
+                    if (Math.random() < 0.45) {
                         // Randomize position: anywhere horizontally, and vertically between the two platforms
                         const coinX = Math.random() * (SCREEN_WIDTH - 30);
                         const minY = newY - 50; // Highest point (visually)
@@ -359,10 +360,10 @@
                                         </div>
                                         <button 
                                             onClick={buyBooster}
-                                            disabled={coins < 57}
-                                            className={`px-4 py-2 rounded font-bold ${coins >= 57 ? 'bg-green-500 hover:bg-green-400 text-white' : 'bg-gray-500 text-gray-300 cursor-not-allowed'}`}
+                                            disabled={coins < 20}
+                                            className={`px-4 py-2 rounded font-bold ${coins >= 20 ? 'bg-green-500 hover:bg-green-400 text-white' : 'bg-gray-500 text-gray-300 cursor-not-allowed'}`}
                                         >
-                                            57 $
+                                            20 $
                                         </button>
                                     </div>
                                     <div className="text-center mt-4 text-gray-400 text-sm">
