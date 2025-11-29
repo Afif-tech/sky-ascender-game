@@ -273,8 +273,8 @@
             </svg>
         );
 
-        const PlatformIcon = () => (
-            <div className="w-full h-full bg-gradient-to-b from-green-400 to-green-600 rounded-md border-t-4 border-green-300 shadow-lg"></div>
+        const PlatformIcon = ({ isMoving }) => (
+            <div className={`w-full h-full rounded-md border-t-4 shadow-lg ${isMoving ? 'bg-gradient-to-b from-blue-400 to-blue-600 border-blue-300' : 'bg-gradient-to-b from-green-400 to-green-600 border-green-300'}`}></div>
         );
 
         const CoinIcon = () => (
@@ -449,10 +449,13 @@
 
                 let newPlatforms = [];
                 for (let i = 0; i < 15; i++) {
+                    const isMoving = i > 0 && Math.random() < 0.1;
                     newPlatforms.push({
                         id: i,
                         x: Math.random() * (SCREEN_WIDTH - PLATFORM_WIDTH),
-                        y: startY - (i * 100)
+                        y: startY - (i * 100),
+                        isMoving,
+                        vx: isMoving ? (Math.random() < 0.5 ? 2 : -2) : 0
                     });
                 }
                 newPlatforms[0].x = SCREEN_WIDTH / 2 - PLATFORM_WIDTH/2;
@@ -486,6 +489,17 @@
                 if (gameState !== 'PLAYING') return;
 
                 const p = player.current;
+
+                // Move platforms
+                platforms.current.forEach(plat => {
+                    if (plat.isMoving) {
+                        plat.x += plat.vx;
+                        if (plat.x <= 0 || plat.x + PLATFORM_WIDTH >= SCREEN_WIDTH) {
+                            plat.vx *= -1;
+                        }
+                    }
+                });
+
                 p.vy += GRAVITY;
                 p.y += p.vy;
 
@@ -541,10 +555,13 @@
                 if (highestPlat && highestPlat.y > camera.current.y - 100) {
                     const newY = highestPlat.y - (75 + Math.random() * 35);
                     const newX = Math.random() * (SCREEN_WIDTH - PLATFORM_WIDTH);
+                    const isMoving = Math.random() < 0.1;
                     platforms.current.push({
                         id: Math.random(),
                         x: newX,
-                        y: newY
+                        y: newY,
+                        isMoving,
+                        vx: isMoving ? (Math.random() < 0.5 ? 2 : -2) : 0
                     });
 
                     // Spawn Coin (45% chance)
@@ -651,7 +668,7 @@
 
                         {platforms.current.map(plat => (
                             <div key={plat.id} style={{ position: 'absolute', left: plat.x, top: plat.y - camera.current.y, width: PLATFORM_WIDTH, height: PLATFORM_HEIGHT }}>
-                                <PlatformIcon />
+                                <PlatformIcon isMoving={plat.isMoving} />
                             </div>
                         ))}
 
