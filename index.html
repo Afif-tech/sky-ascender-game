@@ -36,7 +36,7 @@
         const SCREEN_WIDTH = Math.min(window.innerWidth, 500);
 
         // --- Graphics ---
-        const HeroIcon = () => (
+        const HeroIcon = () => (            
             <svg viewBox="0 0 100 100" className="w-full h-full filter drop-shadow-lg">
                 <circle cx="50" cy="50" r="45" fill="#3b82f6" stroke="#1d4ed8" strokeWidth="5" />
                 <circle cx="35" cy="35" r="12" fill="white" />
@@ -44,6 +44,127 @@
                 <circle cx="65" cy="35" r="12" fill="white" />
                 <circle cx="65" cy="35" r="5" fill="black" />
                 <path d="M 35 70 Q 50 80 65 70" stroke="white" strokeWidth="3" fill="none" />
+            </svg>
+        );
+
+        const CatIcon = () => (
+            <svg viewBox="0 0 100 100" className="w-full h-full filter drop-shadow-2xl">
+                <path d="M 20 30 L 10 10 L 35 25 Z" fill="#f97316" stroke="#ea580c" strokeWidth="2" />
+                <path d="M 20 28 L 15 15 L 32 26 Z" fill="#fed7aa" />
+                <path d="M 80 30 L 90 10 L 65 25 Z" fill="#f97316" stroke="#ea580c" strokeWidth="2" />
+                <path d="M 80 28 L 85 15 L 68 26 Z" fill="#fed7aa" />
+                <circle cx="50" cy="55" r="35" fill="#f97316" stroke="#ea580c" strokeWidth="2" />
+                <ellipse cx="50" cy="60" rx="28" ry="25" fill="#fed7aa" />
+                <ellipse cx="38" cy="50" rx="6" ry="10" fill="#065f46" stroke="#064e3b" strokeWidth="1" />
+                <ellipse cx="38" cy="48" rx="3" ry="5" fill="#10b981" />
+                <circle cx="38" cy="46" r="2" fill="white" />
+                <ellipse cx="62" cy="50" rx="6" ry="10" fill="#065f46" stroke="#064e3b" strokeWidth="1" />
+                <ellipse cx="62" cy="48" rx="3" ry="5" fill="#10b981" />
+                <circle cx="62" cy="46" r="2" fill="white" />
+                <path d="M 50 60 L 47 65 L 53 65 Z" fill="#ec4899" />
+                <path d="M 50 65 L 50 68" stroke="#ea580c" strokeWidth="2" />
+                <path d="M 50 68 Q 42 72 38 70" stroke="#ea580c" strokeWidth="2" fill="none" />
+                <path d="M 50 68 Q 58 72 62 70" stroke="#ea580c" strokeWidth="2" fill="none" />
+                <line x1="15" y1="55" x2="32" y2="53" stroke="#ea580c" strokeWidth="1.5" />
+                <line x1="15" y1="60" x2="32" y2="60" stroke="#ea580c" strokeWidth="1.5" />
+                <line x1="15" y1="65" x2="32" y2="67" stroke="#ea580c" strokeWidth="1.5" />
+                <line x1="85" y1="55" x2="68" y2="53" stroke="#ea580c" strokeWidth="1.5" />
+                <line x1="85" y1="60" x2="68" y2="60" stroke="#ea580c" strokeWidth="1.5" />
+                <line x1="85" y1="65" x2="68" y2="67" stroke="#ea580c" strokeWidth="1.5" />
+                <circle cx="30" cy="62" r="2" fill="#fbbf24" opacity="0.4" />
+                <circle cx="70" cy="62" r="2" fill="#fbbf24" opacity="0.4" />
+                <path d="M 32 42 Q 38 40 44 42" stroke="#ea580c" strokeWidth="1.5" fill="none" opacity="0.6" />
+                <path d="M 56 42 Q 62 40 68 42" stroke="#ea580c" strokeWidth="1.5" fill="none" opacity="0.6" />
+            </svg>
+        );
+
+        const DogIcon = () => (
+            <svg viewBox="0 0 100 100" className="w-full h-full filter drop-shadow-2xl">
+                <ellipse cx="25" cy="45" rx="12" ry="25" fill="#92400e" stroke="#78350f" strokeWidth="2" 
+                        transform="rotate(-20 25 45)" />
+                <ellipse cx="25" cy="45" rx="7" ry="18" fill="#d97706" 
+                        transform="rotate(-20 25 45)" />
+                <ellipse cx="75" cy="45" rx="12" ry="25" fill="#92400e" stroke="#78350f" strokeWidth="2" 
+                        transform="rotate(20 75 45)" />
+                <ellipse cx="75" cy="45" rx="7" ry="18" fill="#d97706" 
+                        transform="rotate(20 75 45)" />
+                <circle cx="50" cy="50" r="32" fill="#d97706" stroke="#92400e" strokeWidth="2" />
+                <ellipse cx="50" cy="62" rx="22" ry="18" fill="#fbbf24" />
+                <ellipse cx="50" cy="32" rx="10" ry="8" fill="#92400e" opacity="0.6" />
+                <ellipse cx="38" cy="45" rx="5" ry="8" fill="#422006" stroke="#1c0a00" strokeWidth="1" />
+                <circle cx="38" cy="43" r="2" fill="white" />
+                <ellipse cx="62" cy="45" rx="5" ry="8" fill="#422006" stroke="#1c0a00" strokeWidth="1" />
+                <circle cx="62" cy="43" r="2" fill="white" />
+                <ellipse cx="50" cy="58" rx="6" ry="5" fill="#1c0a00" />
+                <ellipse cx="48" cy="57" rx="2" ry="1.5" fill="#78350f" opacity="0.6" />
+                <path d="M 50 58 L 50 65" stroke="#1c0a00" strokeWidth="2" />
+                <path d="M 50 65 Q 42 68 38 66" stroke="#1c0a00" strokeWidth="2" fill="none" />
+                <path d="M 50 65 Q 58 68 62 66" stroke="#1c0a00" strokeWidth="2" fill="none" />
+                <ellipse cx="50" cy="70" rx="8" ry="5" fill="#ec4899" stroke="#be185d" strokeWidth="1" />
+                <path d="M 50 67 L 50 73" stroke="#be185d" strokeWidth="1" />
+                <path d="M 32 38 Q 38 36 44 38" stroke="#78350f" strokeWidth="2" fill="none" />
+                <path d="M 56 38 Q 62 36 68 38" stroke="#78350f" strokeWidth="2" fill="none" />
+                <circle cx="38" cy="62" r="1.5" fill="#92400e" opacity="0.5" />
+                <circle cx="42" cy="65" r="1" fill="#92400e" opacity="0.5" />
+                <circle cx="62" cy="62" r="1.5" fill="#92400e" opacity="0.5" />
+                <circle cx="58" cy="65" r="1" fill="#92400e" opacity="0.5" />
+                <ellipse cx="32" cy="58" rx="4" ry="3" fill="#fcd34d" opacity="0.4" />
+                <ellipse cx="68" cy="58" rx="4" ry="3" fill="#fcd34d" opacity="0.4" />
+            </svg>
+        );
+
+        const RocketIcon = () => (
+            <svg viewBox="0 0 100 100" className="w-full h-full filter drop-shadow-2xl">
+                <ellipse cx="50" cy="60" rx="15" ry="35" fill="#e5e7eb" stroke="#9ca3af" strokeWidth="2" />
+                <path d="M 35 25 L 50 5 L 65 25 Z" fill="#ef4444" stroke="#b91c1c" strokeWidth="2" />
+                <circle cx="50" cy="45" r="8" fill="#60a5fa" stroke="#1e40af" strokeWidth="2" />
+                <circle cx="50" cy="45" r="5" fill="#93c5fd" opacity="0.6" />
+                <path d="M 35 70 L 25 85 L 35 80 Z" fill="#3b82f6" stroke="#1e40af" strokeWidth="2" />
+                <path d="M 65 70 L 75 85 L 65 80 Z" fill="#3b82f6" stroke="#1e40af" strokeWidth="2" />
+                <ellipse cx="50" cy="95" rx="8" ry="12" fill="#fbbf24" opacity="0.8" />
+                <ellipse cx="42" cy="93" rx="5" ry="10" fill="#f97316" opacity="0.7" />
+                <ellipse cx="58" cy="93" rx="5" ry="10" fill="#f97316" opacity="0.7" />
+                <ellipse cx="50" cy="100" rx="4" ry="8" fill="#ef4444" opacity="0.6" />
+                <line x1="35" y1="55" x2="65" y2="55" stroke="#9ca3af" strokeWidth="1" opacity="0.5" />
+                <line x1="35" y1="65" x2="65" y2="65" stroke="#9ca3af" strokeWidth="1" opacity="0.5" />
+                <circle cx="15" cy="20" r="1.5" fill="#fbbf24" />
+                <circle cx="85" cy="25" r="1" fill="#fbbf24" />
+                <circle cx="20" cy="80" r="1" fill="#fbbf24" />
+                <circle cx="80" cy="70" r="1.5" fill="#fbbf24" />
+                <circle cx="10" cy="50" r="1" fill="#fbbf24" />
+                <circle cx="90" cy="45" r="1" fill="#fbbf24" />
+            </svg>
+        );
+
+        const NinjaIcon = () => (
+            <svg viewBox="0 0 100 100" className="w-full h-full filter drop-shadow-2xl">
+                <circle cx="50" cy="50" r="35" fill="#1e293b" stroke="#0f172a" strokeWidth="2" />
+                <ellipse cx="50" cy="28" rx="36" ry="8" fill="#dc2626" stroke="#991b1b" strokeWidth="2" />
+                <rect x="14" y="24" width="72" height="8" fill="#dc2626" />
+                <path d="M 12 28 L 5 25 L 8 32 L 12 30 Z" fill="#dc2626" stroke="#991b1b" strokeWidth="1" />
+                <path d="M 5 25 L 2 20 L 0 28 Z" fill="#b91c1c" stroke="#991b1b" strokeWidth="1" />
+                <path d="M 88 28 L 95 25 L 92 32 L 88 30 Z" fill="#dc2626" stroke="#991b1b" strokeWidth="1" />
+                <path d="M 95 25 L 98 20 L 100 28 Z" fill="#b91c1c" stroke="#991b1b" strokeWidth="1" />
+                <ellipse cx="50" cy="60" rx="30" ry="22" fill="#0f172a" />
+                <rect x="20" y="38" width="60" height="18" fill="#fef3c7" rx="2" />
+                <ellipse cx="35" cy="47" rx="8" ry="10" fill="#422006" stroke="#1c0a00" strokeWidth="1" />
+                <ellipse cx="35" cy="45" rx="4" ry="6" fill="#78350f" />
+                <circle cx="36" cy="44" r="2" fill="white" />
+                <ellipse cx="65" cy="47" rx="8" ry="10" fill="#422006" stroke="#1c0a00" strokeWidth="1" />
+                <ellipse cx="65" cy="45" rx="4" ry="6" fill="#78350f" />
+                <circle cx="66" cy="44" r="2" fill="white" />
+                <path d="M 26 40 L 44 38" stroke="#1c0a00" strokeWidth="2" />
+                <path d="M 74 40 L 56 38" stroke="#1c0a00" strokeWidth="2" />
+                <path d="M 25 55 Q 50 58 75 55" stroke="#334155" strokeWidth="1" opacity="0.5" fill="none" />
+                <path d="M 28 62 Q 50 65 72 62" stroke="#334155" strokeWidth="1" opacity="0.5" fill="none" />
+                <g transform="translate(50, 20) scale(0.4)">
+                    <path d="M 0,-10 L 2,-2 L 10,0 L 2,2 L 0,10 L -2,2 L -10,0 L -2,-2 Z" 
+                        fill="#71717a" stroke="#52525b" strokeWidth="1" />
+                    <circle cx="0" cy="0" r="2" fill="#27272a" />
+                </g>
+                <ellipse cx="35" cy="54" rx="6" ry="2" fill="#1c0a00" opacity="0.2" />
+                <ellipse cx="65" cy="54" rx="6" ry="2" fill="#1c0a00" opacity="0.2" />
+                <ellipse cx="50" cy="26" rx="15" ry="2" fill="#ef4444" opacity="0.6" />
             </svg>
         );
 
@@ -75,7 +196,17 @@
             const [isMuted, setIsMuted] = useState(false);
             const [coins, setCoins] = useState(0);
             const [showShop, setShowShop] = useState(false);
+            const [ownedSkins, setOwnedSkins] = useState(['default']);
+            const [currentSkin, setCurrentSkin] = useState('default');
             const [, setTick] = useState(0); // Force render
+
+            const SKINS = [
+                { id: 'default', name: 'Blue Smiley', price: 0, Component: HeroIcon },
+                { id: 'cat', name: 'Cat', price: 12, Component: CatIcon },
+                { id: 'dog', name: 'Dog', price: 12, Component: DogIcon },
+                { id: 'rocket', name: 'Rocket', price: 15, Component: RocketIcon },
+                { id: 'ninja', name: 'Ninja', price: 17, Component: NinjaIcon },
+            ];
 
             // Refs
             const player = useRef({ x: SCREEN_WIDTH / 2, y: 0, vx: 0, vy: 0 });
@@ -144,7 +275,7 @@
                 player.current = { x: SCREEN_WIDTH / 2 - PLAYER_SIZE/2, y: startY - 100, vx: 0, vy: JUMP_FORCE };
                 camera.current.y = 0;
                 setScore(0);
-                setCoins(0);
+                // setCoins(0);
 
                 let newPlatforms = [];
                 for (let i = 0; i < 15; i++) {
@@ -162,9 +293,19 @@
                 setGameState('PLAYING');
             };
 
+            const buySkin = (skinId, price) => {
+                if (ownedSkins.includes(skinId)) {
+                    setCurrentSkin(skinId);
+                } else if (coins >= price) {
+                    setCoins(c => c - price);
+                    setOwnedSkins(prev => [...prev, skinId]);
+                    setCurrentSkin(skinId);
+                }
+            };
+
             const buyBooster = () => {
-                if (coins >= 20) {
-                    setCoins(c => c - 20);
+                if (coins >= 12) {
+                    setCoins(c => c - 12);
                     boosterEndTime.current = Date.now() + 10000;
                     setShowShop(false);
                 }
@@ -319,7 +460,10 @@
                         ))}
                         
                         <div style={{ position: 'absolute', left: player.current.x, top: player.current.y - camera.current.y, width: PLAYER_SIZE, height: PLAYER_SIZE }}>
-                            <HeroIcon />
+                            {(() => {
+                                const SkinComponent = SKINS.find(s => s.id === currentSkin)?.Component || HeroIcon;
+                                return <SkinComponent />;
+                            })()}
                         </div>
 
                         {/* HUD */}
@@ -348,25 +492,75 @@
                         {/* Shop Modal */}
                         {showShop && (
                             <div className="absolute inset-0 bg-black/80 z-[60] flex items-center justify-center p-4" onClick={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()}>
-                                <div className="bg-gray-800 p-6 rounded-xl border border-gray-600 w-full max-w-sm shadow-2xl">
-                                    <div className="flex justify-between items-center mb-4">
+                                <div className="bg-gray-800 p-6 rounded-xl border border-gray-600 w-full max-w-sm shadow-2xl max-h-[80vh] overflow-y-auto">
+                                    <div className="flex justify-between items-center mb-4 sticky top-0 bg-gray-800 pb-2 border-b border-gray-700">
                                         <h2 className="text-2xl font-bold text-white">Item Shop</h2>
                                         <button onClick={() => setShowShop(false)} className="text-gray-400 hover:text-white">✕</button>
                                     </div>
-                                    <div className="bg-gray-700 p-4 rounded-lg flex justify-between items-center mb-2">
-                                        <div>
-                                            <h3 className="text-yellow-400 font-bold text-lg">Jump Booster</h3>
-                                            <p className="text-gray-300 text-xs">Double jump height (10s)</p>
+                                    
+                                    {/* Boosters Section */}
+                                    <div className="mb-6">
+                                        <h3 className="text-gray-400 text-sm font-bold mb-2 uppercase tracking-wider">Boosters</h3>
+                                        <div className="bg-gray-700 p-4 rounded-lg flex justify-between items-center mb-2">
+                                            <div>
+                                                <h3 className="text-yellow-400 font-bold text-lg">Jump Booster</h3>
+                                                <p className="text-gray-300 text-xs">Double jump height (10s)</p>
+                                            </div>
+                                            <button 
+                                                onClick={buyBooster}
+                                                disabled={coins < 12}
+                                                className={`px-4 py-2 rounded font-bold ${coins >= 12 ? 'bg-green-500 hover:bg-green-400 text-white' : 'bg-gray-500 text-gray-300 cursor-not-allowed'}`}
+                                            >
+                                                12 $
+                                            </button>
                                         </div>
-                                        <button 
-                                            onClick={buyBooster}
-                                            disabled={coins < 20}
-                                            className={`px-4 py-2 rounded font-bold ${coins >= 20 ? 'bg-green-500 hover:bg-green-400 text-white' : 'bg-gray-500 text-gray-300 cursor-not-allowed'}`}
-                                        >
-                                            20 $
-                                        </button>
                                     </div>
-                                    <div className="text-center mt-4 text-gray-400 text-sm">
+
+                                    {/* Skins Section */}
+                                    <div>
+                                        <h3 className="text-gray-400 text-sm font-bold mb-2 uppercase tracking-wider">Skins</h3>
+                                        <div className="space-y-2">
+                                            {SKINS.map(skin => {
+                                                const isOwned = ownedSkins.includes(skin.id);
+                                                const isEquipped = currentSkin === skin.id;
+                                                
+                                                return (
+                                                    <div key={skin.id} className={`bg-gray-700 p-3 rounded-lg flex justify-between items-center ${isEquipped ? 'border-2 border-yellow-500' : ''}`}>
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-10 h-10">
+                                                                <skin.Component />
+                                                            </div>
+                                                            <div>
+                                                                <h3 className="text-white font-bold">{skin.name}</h3>
+                                                                {!isOwned && <p className="text-yellow-400 text-xs">{skin.price} $</p>}
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        {isEquipped ? (
+                                                            <span className="text-yellow-500 font-bold text-sm px-3">EQUIPPED</span>
+                                                        ) : isOwned ? (
+                                                            <button 
+                                                                onClick={() => buySkin(skin.id, skin.price)}
+                                                                className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold"
+                                                            >
+                                                                EQUIP
+                                                            </button>
+                                                        ) : (
+                                                            <button 
+                                                                onClick={() => buySkin(skin.id, skin.price)}
+                                                                disabled={coins < skin.price}
+                                                                className={`px-3 py-1 rounded text-sm font-bold ${coins >= skin.price ? 'bg-green-500 hover:bg-green-400 text-white' : 'bg-gray-500 text-gray-300 cursor-not-allowed'}`}
+                                                            >
+                                                                BUY
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    <div className="text-center mt-6 pt-4 border-t border-gray-700 text-gray-400 text-sm sticky bottom-0 bg-gray-800">
                                         Your Balance: <span className="text-yellow-400 font-bold">{coins} $</span>
                                     </div>
                                 </div>
