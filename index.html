@@ -190,7 +190,7 @@
                     platforms.current.push({
                         id: Math.random(),
                         x: Math.random() * (SCREEN_WIDTH - PLATFORM_WIDTH),
-                        y: highestPlat.y - (90 + Math.random() * 40)
+                        y: highestPlat.y - (75 + Math.random() * 35)
                     });
                 }
 
@@ -243,7 +243,7 @@
                             style={{
                                 background: 'radial-gradient(white 1px, transparent 1px)',
                                 backgroundSize: '30px 30px',
-                                transform: `translateY(${camera.current.y * 0.5}px)` 
+                                backgroundPosition: `0px ${camera.current.y * 0.5}px`
                             }} 
                         />
 
